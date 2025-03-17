@@ -111,19 +111,27 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         return {}; 
     }
     
+    unordered_set<string> fast_word_set(word_list.begin(), word_list.end());
+    
+    if (end_word != begin_word && fast_word_set.find(end_word) == fast_word_set.end()) {
+        return {};
+    }
+    
     queue<vector<string>> ladder_queue;
-    set<string> visited;
+    unordered_set<string> visited;
     
     vector<string> initial_ladder = {begin_word};
     ladder_queue.push(initial_ladder);
     visited.insert(begin_word);
     
-    map<int, vector<string>> length_grouped_words;
-    for (const string& word : word_list) {
+    unordered_map<int, vector<string>> length_grouped_words;
+    for (const string& word : fast_word_set) {
         length_grouped_words[word.length()].push_back(word);
     }
     
-    while (!ladder_queue.empty()) {
+    int max_queue_size = 100000;
+    
+    while (!ladder_queue.empty() && ladder_queue.size() < max_queue_size) {
         vector<string> current_ladder = ladder_queue.front();
         ladder_queue.pop();
         
@@ -132,7 +140,8 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         int last_word_len = last_word.length();
         
         for (int length = max(1, last_word_len - 1); length <= last_word_len + 1; length++) {
-            for (const string& word : length_grouped_words[length]) {
+            const auto& words_of_length = length_grouped_words[length];
+            for (const string& word : words_of_length) {
                 if (visited.find(word) != visited.end()) {
                     continue;
                 }
@@ -163,7 +172,9 @@ void load_words(set<string>& word_list, const string& file_name) {
         exit(1);
     }
     
+    word_list.clear();
     string word;
+    
     while (in >> word) {
         for (char& c : word) {
             c = tolower(c);
