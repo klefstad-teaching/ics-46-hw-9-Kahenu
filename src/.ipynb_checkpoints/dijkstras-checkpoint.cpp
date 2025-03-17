@@ -1,68 +1,47 @@
 #include "dijkstras.h"
 
 vector<int> dijkstra_shortest_path(const Graph& G, int source, vector<int>& previous) {
-    int n = G.numVertices;
-    vector<int> distance(n, INF);
-    vector<bool> visited(n, false);
-    previous.resize(n, -1);
-    
-    distance[source] = 0;
-    
-    for (int i = 0; i < n; i++) {
-        int u = -1;
-        int min_dist = INF;
-        
-        for (int v = 0; v < n; v++) {
-            if (!visited[v] && distance[v] < min_dist) {
-                min_dist = distance[v];
-                u = v;
-            }
-        }
-        
-        if (u == -1) break;
-        
-        visited[u] = true;
-        
-        for (const Edge& edge : G[u]) {
-            int v = edge.dst;
-            int weight = edge.weight;
-            
-            if (!visited[v] && distance[u] != INF && distance[u] + weight < distance[v]) {
-                distance[v] = distance[u] + weight;
+    vector<int> distances(G.numVertices, INF);
+    distances[source] = 0;
+    previous.resize(G.numVertices, -1);
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+    pq.push({0, source});
+
+    while (!pq.empty()) {
+        int u = pq.top().second;
+        int dist = pq.top().first;
+        pq.pop();
+
+        if (dist > distances[u]) continue;
+
+        for (const Edge& e : G[u]) {
+            int v = e.dst;
+            int weight = e.weight;
+            if (distances[u] + weight < distances[v]) {
+                distances[v] = distances[u] + weight;
                 previous[v] = u;
+                pq.push({distances[v], v});
             }
         }
     }
-    
-    return distance;
+
+    return distances;
 }
 
 vector<int> extract_shortest_path(const vector<int>& distances, const vector<int>& previous, int destination) {
     vector<int> path;
-    
-    if (destination < 0 || destination >= distances.size() || distances[destination] == INF) 
-        return path;
-    
-    int current = destination;
-    while (current != -1) {
-        path.push_back(current);
-        current = previous[current];
+    for (int v = destination; v != -1; v = previous[v]) {
+        path.push_back(v);
     }
-    
     reverse(path.begin(), path.end());
     return path;
 }
 
-void print_path(const vector<int>& path, int total) {
-    if (path.empty()) {
-        cout << endl << "Total cost is " << total << endl;
-        return;
+void print_path(const vector<int>& v, int total) {
+    for (size_t i = 0; i < v.size(); ++i) {
+        cout << v[i];
+        if (i != v.size() - 1) cout << " ";
+        else cout << " ";
     }
-    
-    for (size_t i = 0; i < path.size(); ++i) {
-        cout << path[i];
-        cout << " ";
-    }
-    cout << endl;
-    cout << "Total cost is " << total << endl;
+    cout << endl << "Total cost is " << total << endl;
 }
