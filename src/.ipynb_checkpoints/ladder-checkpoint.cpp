@@ -20,13 +20,40 @@ bool edit_distance_within(const string& str1, const string& str2, int d) {
             } else {
                 dp[i][j] = 1 + min({dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]});
             }
+            if (dp[i][j] > d) return false;
         }
     }
     return dp[m][n] <= d;
 }
 
 bool is_adjacent(const string& word1, const string& word2) {
-    return edit_distance_within(word1, word2, 1);
+    int len1 = word1.length();
+    int len2 = word2.length();
+    if (abs(len1 - len2) > 1) return false;
+
+    int diff = 0;
+    if (len1 == len2) {
+        for (int i = 0; i < len1; ++i) {
+            if (word1[i] != word2[i]) diff++;
+            if (diff > 1) return false;
+        }
+        return diff == 1;
+    } else {
+        const string& longer = (len1 > len2) ? word1 : word2;
+        const string& shorter = (len1 > len2) ? word2 : word1;
+        int i = 0, j = 0;
+        while (i < longer.length() && j < shorter.length()) {
+            if (longer[i] != shorter[j]) {
+                diff++;
+                if (diff > 1) return false;
+                i++;
+            } else {
+                i++;
+                j++;
+            }
+        }
+        return true;
+    }
 }
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
