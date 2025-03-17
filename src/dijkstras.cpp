@@ -8,29 +8,18 @@ vector<int> dijkstra_shortest_path(const Graph& G, int source, vector<int>& prev
     
     distance[source] = 0;
     
-    struct Node {
-        int vertex;
-        int weight;
+    for (int i = 0; i < n; i++) {
+        int u = -1;
+        int min_dist = INF;
         
-        Node(int v, int w) : vertex(v), weight(w) {}
-        
-        bool operator>(const Node& other) const {
-            return weight > other.weight;
+        for (int v = 0; v < n; v++) {
+            if (!visited[v] && distance[v] < min_dist) {
+                min_dist = distance[v];
+                u = v;
+            }
         }
-    };
-    
-    priority_queue<Node, vector<Node>, greater<Node>> pq;
-    pq.push(Node(source, 0));
-    
-    while (!pq.empty()) {
-        Node current = pq.top();
-        pq.pop();
         
-        int u = current.vertex;
-        
-        if (visited[u]) {
-            continue;
-        }
+        if (u == -1) break;
         
         visited[u] = true;
         
@@ -41,7 +30,6 @@ vector<int> dijkstra_shortest_path(const Graph& G, int source, vector<int>& prev
             if (!visited[v] && distance[u] != INF && distance[u] + weight < distance[v]) {
                 distance[v] = distance[u] + weight;
                 previous[v] = u;
-                pq.push(Node(v, distance[v]));
             }
         }
     }
@@ -52,9 +40,14 @@ vector<int> dijkstra_shortest_path(const Graph& G, int source, vector<int>& prev
 vector<int> extract_shortest_path(const vector<int>& distances, const vector<int>& previous, int destination) {
     vector<int> path;
     
-    if (distances[destination] == INF) return path;
+    if (destination < 0 || destination >= distances.size() || distances[destination] == INF) 
+        return path;
     
-    for (int at = destination; at != -1; at = previous[at]) path.push_back(at);
+    int current = destination;
+    while (current != -1) {
+        path.push_back(current);
+        current = previous[current];
+    }
     
     reverse(path.begin(), path.end());
     return path;

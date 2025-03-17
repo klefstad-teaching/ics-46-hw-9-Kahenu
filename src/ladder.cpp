@@ -67,7 +67,43 @@ bool edit_distance_within(const std::string& str1, const std::string& str2, int 
 }
 
 bool is_adjacent(const string& word1, const string& word2) {
-    return edit_distance_within(word1, word2, 1);
+    if (word1 == word2) return true;
+    
+    int len1 = word1.length();
+    int len2 = word2.length();
+    int diff = abs(len1 - len2);
+    
+    if (diff > 1) return false;
+    
+    if (len1 == len2) {
+        int differences = 0;
+        for (int i = 0; i < len1; i++) {
+            if (word1[i] != word2[i]) {
+                differences++;
+                if (differences > 1) return false;
+            }
+        }
+        return differences <= 1;
+    }
+    
+    const string& shorter = len1 < len2 ? word1 : word2;
+    const string& longer = len1 < len2 ? word2 : word1;
+    
+    int i = 0, j = 0;
+    bool skipped = false;
+    
+    while (i < shorter.length() && j < longer.length()) {
+        if (shorter[i] != longer[j]) {
+            if (skipped) return false;
+            skipped = true;
+            j++;
+        } else {
+            i++;
+            j++;
+        }
+    }
+    
+    return true;
 }
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
@@ -80,6 +116,11 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
     ladder_queue.push(initial_ladder);
     visited.insert(begin_word);
     
+    map<int, vector<string>> length_grouped_words;
+    for (const string& word : word_list) {
+        length_grouped_words[word.length()].push_back(word);
+    }
+    
     while (!ladder_queue.empty()) {
         vector<string> current_ladder = ladder_queue.front();
         ladder_queue.pop();
@@ -88,17 +129,21 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         
         if (last_word == end_word) return current_ladder;
         
-        for (const string& word : word_list) {
-            if (visited.find(word) != visited.end()) continue;
-            
-            if (is_adjacent(last_word, word)) {
-                vector<string> new_ladder = current_ladder;
-                new_ladder.push_back(word);
+        int last_word_len = last_word.length();
+        
+        for (int length = max(1, last_word_len - 1); length <= last_word_len + 1; length++) {
+            for (const string& word : length_grouped_words[length]) {
+                if (visited.find(word) != visited.end()) continue;
                 
-                if (word == end_word) return new_ladder;
-                
-                visited.insert(word);
-                ladder_queue.push(new_ladder);
+                if (is_adjacent(last_word, word)) {
+                    vector<string> new_ladder = current_ladder;
+                    new_ladder.push_back(word);
+                    
+                    if (word == end_word) return new_ladder;
+                    
+                    visited.insert(word);
+                    ladder_queue.push(new_ladder);
+                }
             }
         }
     }
